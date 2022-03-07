@@ -14,13 +14,14 @@
 #include <arpa/inet.h>
 
 #include "epoller.h"
+#include "../timer/heaptimer.h"
 #include "../pool/threadpool.h"
 #include "../http/httpconn.h"
 #include "../pool/sqlconnpool.h"
 #include "../pool/sqlconnRAII.h"
 class WebServer {
 public:
-    WebServer( int port, int trigMode,bool OptLinger, int sqlPort, const char* sqlUser, 
+    WebServer( int port, int trigMode, int timeoutMS,bool OptLinger, int sqlPort, const char* sqlUser, 
         const char* sqlPwd, const char* dbName, int connPoolNum, int threadNum );
 
     ~WebServer();
@@ -39,7 +40,7 @@ private:
     void DealRead_(HttpConn* client);  //加入线程池的任务队列
 
     void SendError_(int fd, const char*info); //断开连接（连接满了）
-    //void ExtentTime_(HttpConn* client);
+    void ExtentTime_(HttpConn* client);
     void CloseConn_(HttpConn* client); //关闭连接，关闭文件描述符，关闭http连接
     
     void OnRead_(HttpConn* client); //任务队列中具体内容
@@ -60,7 +61,7 @@ private:
     uint32_t listenEvent_;
     uint32_t connEvent_;
    
-
+    std::unique_ptr<HeapTimer> timer_;
     std::unique_ptr<ThreadPool> threadpool_;
     std::unique_ptr<Epoller> epoller_;
     std::unordered_map<int, HttpConn> users_;

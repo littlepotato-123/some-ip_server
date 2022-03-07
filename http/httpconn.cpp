@@ -8,7 +8,7 @@ bool HttpConn::isET;
 HttpConn::HttpConn() {
     fd_ = -1;
     addr_ = {0};
-    isClose_ = true;
+    isClose_ = false;
 }
 
 HttpConn::~HttpConn() {
@@ -45,7 +45,7 @@ const char* HttpConn::GetIP() const {
 }
 
 int HttpConn::GetPort() const {
-    return addr_.sin_port;
+    return ntohs(addr_.sin_port);
 }
 
 ssize_t HttpConn::read(int* saveErrono){

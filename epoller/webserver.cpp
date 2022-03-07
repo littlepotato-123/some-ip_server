@@ -1,9 +1,9 @@
 #include "webserver.h"
 using namespace std;
 
-WebServer::WebServer(int port, int trigMode,bool OptLinger, int sqlPort, const char* sqlUser, 
-        const char* sqlPwd, const char* dbName, int connPoolNum, int threadNum):port_(port),
-        openLinger_(OptLinger), isClose_(false),threadpool_(new ThreadPool(threadNum)), epoller_(new Epoller())
+WebServer::WebServer(int port, int trigMode, int timeoutMS,bool OptLinger, int sqlPort, const char* sqlUser, 
+        const char* sqlPwd, const char* dbName, int connPoolNum, int threadNum):port_(port), timeoutMS_(timeoutMS),
+        openLinger_(OptLinger), isClose_(false),threadpool_(new ThreadPool(threadNum)), epoller_(new Epoller()), timer_(new HeapTimer())
 {
     //srcDir_ = getcwd(nullptr, 256);
     //assert(srcDir_);
@@ -64,9 +64,14 @@ void WebServer::Start(){
         //     isClose_ = 1;
         //     continue;
         // }
+        if(timeoutMS_ > 0) {
+            timeMS = timer_->GetNextTick();
+            printf("timeMS = %d\n", timeMS);
+        }
 
         int eventCnt = epoller_->Wait(timeMS);
-        //printf("one more loop\n");
+        printf("one more loop\n");
+
         for(int i = 0; i < eventCnt; ++i){
             int fd = epoller_->GetEventFd(i);
             uint32_t events = epoller_->GetEvents(i);
@@ -97,6 +102,8 @@ void WebServer::SendError_(int fd, const char*info) {
 
 void WebServer::CloseConn_(HttpConn* client) {
     assert(client);
+    printf("closing client:%d\n ip:%s port:%d\n",client->GetFd(), client->GetIP(), client->GetPort());
+    SendError_(client->GetFd(), "time out!");
     epoller_->DelFd(client->GetFd());
     client->Close();
 }
@@ -104,11 +111,15 @@ void WebServer::CloseConn_(HttpConn* client) {
 void WebServer::AddClient_(int fd, sockaddr_in addr) {
     assert(fd > 0);
     users_[fd].init(fd, addr);
+    if(timeoutMS_ > 0) {
+        timer_->add(fd, timeoutMS_, std::bind(&WebServer::CloseConn_, this, &users_[fd]));
+    }
     epoller_->AddFd(fd, EPOLLIN | connEvent_);
     SetFdNonblock(fd);
 }
 
 void WebServer::DealListen_(){
+    printf("deal listen\n");
     struct sockaddr_in addr;
     socklen_t len = sizeof(addr);
     do{
@@ -118,21 +129,29 @@ void WebServer::DealListen_(){
             SendError_(fd, "Server busy!");
             return;
         }
+        printf("deal listen new connect fd = %d\n", fd);
         AddClient_(fd, addr);
+        printf("deal listen addclient over\n");
     }while(listenEvent_ & EPOLLET); 
 }
 
 void WebServer::DealRead_(HttpConn* client){
+
     assert(client);
+    printf("start to deal read\n");
+    ExtentTime_(client);
     threadpool_->AddTask(std::bind(&WebServer::OnRead_, this, client));
 }
 
 void WebServer::DealWrite_(HttpConn* client) {
     assert(client);
+    printf("start to deal write\n");
+    ExtentTime_(client);
     threadpool_->AddTask(std::bind(&WebServer::OnWrite_, this, client));
 }
 void WebServer::OnRead_(HttpConn* client) {
     assert(client);
+    printf("onReading\n");
     int ret = -1;
     int readErrno = 0;
     ret = client->read(&readErrno);
@@ -140,6 +159,7 @@ void WebServer::OnRead_(HttpConn* client) {
         CloseConn_(client);
         return;
     }
+    printf("onRead over ,begin to on process\n");
     OnProcess(client);
 }
 
@@ -228,4 +248,11 @@ bool WebServer::InitSocket_(){
 int WebServer::SetFdNonblock(int fd) {
     assert(fd > 0);
     return fcntl(fd, F_SETFL, fcntl(fd, F_GETFD, 0) | O_NONBLOCK);
+}
+
+void WebServer::ExtentTime_(HttpConn* client) {
+    assert(client);
+    printf("extentTiming\n");
+    if(timeoutMS_ > 0) { timer_->adjust(client->GetFd(), timeoutMS_); }
+    printf("extentTime over\n");
 }
