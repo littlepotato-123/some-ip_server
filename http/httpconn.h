@@ -19,9 +19,11 @@
 #include <time.h>
 class HttpConn {
 public:
-    HttpConn();
+    HttpConn(int fd, const sockaddr_in& addr);
 
     ~HttpConn();
+
+    bool GetIsClosed();
 
     void init(int sockFd, const sockaddr_in& addr);
 

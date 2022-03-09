@@ -5,16 +5,19 @@ using namespace std;
 std::atomic<int> HttpConn::userCount;
 bool HttpConn::isET;
 
-HttpConn::HttpConn() {
-    fd_ = -1;
-    addr_ = {0};
-    isClose_ = false;
+HttpConn::HttpConn(int fd, const sockaddr_in& addr): isClose_(false) {
+    init(fd, addr);
 }
 
 HttpConn::~HttpConn() {
+    --userCount;
+    close(fd_);
     Close();
 }
 
+bool HttpConn::GetIsClosed() {
+    return isClose_;
+}
 void HttpConn::init(int fd, const sockaddr_in& addr) {
     assert(fd > 0);
     ++userCount;
@@ -22,14 +25,10 @@ void HttpConn::init(int fd, const sockaddr_in& addr) {
     fd_ = fd;
     writeBuff_.RetrieveAll();
     readBuff_.RetrieveAll();
-    isClose_ = false;
+    //isClose_ = false;
 }
 void HttpConn::Close() {
-    if(isClose_ == false){
-        isClose_ = true;
-        --userCount;
-        close(fd_);
-    }
+    isClose_ = true;
 }
 
 int HttpConn::GetFd() const {

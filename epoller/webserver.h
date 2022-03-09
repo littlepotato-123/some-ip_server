@@ -36,16 +36,16 @@ private:
     void AddClient_(int fd, sockaddr_in addr);  //epoll_add
    
     void DealListen_();    //accept
-    void DealWrite_(HttpConn* client); //加入线程池的任务队列
-    void DealRead_(HttpConn* client);  //加入线程池的任务队列
+    void DealWrite_(std::weak_ptr<HttpConn> wkclient); //加入线程池的任务队列
+    void DealRead_(std::weak_ptr<HttpConn> wkclient);  //加入线程池的任务队列
 
     void SendError_(int fd, const char*info); //断开连接（连接满了）
-    void ExtentTime_(HttpConn* client);
-    void CloseConn_(HttpConn* client); //关闭连接，关闭文件描述符，关闭http连接
+    void ExtentTime_(std::weak_ptr<HttpConn> wkclient);
+    void CloseConn_(std::weak_ptr<HttpConn> wkclient); //关闭连接，关闭文件描述符，关闭http连接
     
-    void OnRead_(HttpConn* client); //任务队列中具体内容
-    void OnWrite_(HttpConn* client);//任务队列中具体内容
-    void OnProcess(HttpConn* client);//先看能不能读，不可以就转写
+    void OnRead_(std::weak_ptr<HttpConn> wkclient); //任务队列中具体内容
+    void OnWrite_(std::weak_ptr<HttpConn> wkclient);//任务队列中具体内容
+    void OnProcess(std::weak_ptr<HttpConn> wkclient);//先看能不能读，不可以就转写
 
     static const int MAX_FD = 65536;
 
@@ -64,7 +64,8 @@ private:
     std::unique_ptr<HeapTimer> timer_;
     std::unique_ptr<ThreadPool> threadpool_;
     std::unique_ptr<Epoller> epoller_;
-    std::unordered_map<int, HttpConn> users_;
+    //users_并发问题
+    std::unordered_map<int, std::shared_ptr<HttpConn> > users_;
 };
 
 

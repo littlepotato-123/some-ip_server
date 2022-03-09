@@ -34,12 +34,14 @@ public:
     HeapTimer() { heap_.reserve(64); }
 
     ~HeapTimer() { clear(); }
+
+    void del_fd(int fd);
     
     void adjust(int id, int newExpires);
 
     void add(int id, int timeOut, const TimeoutCallBack& cb);
 
-    void doWork(int id);
+    //void doWork(int id);
 
     void clear();
 
@@ -48,6 +50,7 @@ public:
     void pop();
 
     int GetNextTick();
+
 
 private:
     void del_(size_t i);
