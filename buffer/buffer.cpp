@@ -14,7 +14,7 @@ size_t Buffer::PrependableBytes() const {
     return readPos_;
 }
 
-const char* Buffer::Peek() const {
+const std::uint8_t* Buffer::Peek() const {
     return BeginPtr_() + readPos_;
 }
 
@@ -23,7 +23,7 @@ void Buffer::Retrieve(size_t len) {
     readPos_ += len;
 }
 
-void Buffer::RetrieveUntil(const char* end){
+void Buffer::RetrieveUntil(const std::uint8_t* end){
     assert( Peek() <= end );
     Retrieve(end - Peek());
 }
@@ -35,16 +35,16 @@ void Buffer::RetrieveAll() {
 }
 
 std::string Buffer::RetrieveAllToStr() {
-    std::string str(Peek(), ReadableBytes());
+    std::string str((char* )Peek(), ReadableBytes());
     RetrieveAll();
     return str;
 }
 
-const char* Buffer::BeginWriteConst() const {
+const std::uint8_t* Buffer::BeginWriteConst() const {
     return BeginPtr_() + writePos_;
 }
 
-char* Buffer::BeginWrite() {
+std::uint8_t* Buffer::BeginWrite() {
     return BeginPtr_() + writePos_;
 }
 
@@ -58,10 +58,10 @@ void Buffer::Append(const std::string& str) {
 
 void Buffer::Append(const void* data, size_t len) {
     assert(data);
-    Append(static_cast<const char*>(data), len);
+    Append(static_cast<const std::uint8_t*>(data), len);
 }
 
-void Buffer::Append(const char* str, size_t len) {
+void Buffer::Append(const std::uint8_t* str, size_t len) {
     assert(str);
     EnsureWriteable(len);
     std::copy(str, str + len, BeginWrite());
@@ -80,7 +80,7 @@ void Buffer::EnsureWriteable(size_t len) {
 }
 
 ssize_t Buffer::ReadFd(int fd, int* saveErrno) {
-    char buff[65535];
+    std::uint8_t buff[65535];
     struct iovec iov[2];
     const size_t writable = WritableBytes();
     //分散读
@@ -112,11 +112,11 @@ ssize_t Buffer::WriteFd(int fd, int* saveErrno) {
     return len;
 }
 
-char* Buffer::BeginPtr_() {
+std::uint8_t* Buffer::BeginPtr_() {
     return &*buffer_.begin();
 }
 
-const char* Buffer::BeginPtr_() const {
+const std::uint8_t* Buffer::BeginPtr_() const {
     return &*buffer_.begin();
 }
 

@@ -7,6 +7,7 @@
 #ifndef HTTP_CONN_H
 #define HTTP_CONN_H
 
+#include <../someipParse/someipParse.hpp>
 #include <algorithm>
 #include <sys/types.h>
 #include <sys/uio.h>     // readv/writev
@@ -63,6 +64,8 @@ private:
     
     Buffer readBuff_; // 读缓冲区
     Buffer writeBuff_; // 写缓冲区
+
+    someipParse someip_parse_;
 
 };
 

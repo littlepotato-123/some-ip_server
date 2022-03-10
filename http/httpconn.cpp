@@ -86,8 +86,10 @@ bool HttpConn::process() {
     if(readBuff_.ReadableBytes() <= 0) {
         return false;
     }
+    else if()
+
     else {
-        std::string line(readBuff_.Peek(), readBuff_.ReadableBytes());
+        std::string line((char* )readBuff_.Peek(), readBuff_.ReadableBytes());
         readBuff_.RetrieveAll();
 
         auto t = time(nullptr);
@@ -112,7 +114,7 @@ bool HttpConn::process() {
         writeBuff_.Append(line.data(), line.size());
         string mark("this bill's web");
         writeBuff_.Append(mark.data(), mark.size());
-        iov_[0].iov_base = const_cast<char* >(writeBuff_.Peek());
+        iov_[0].iov_base = const_cast<char* >((char* )writeBuff_.Peek());
         iov_[0].iov_len = writeBuff_.ReadableBytes();
         iovCnt_ = 1;
     }

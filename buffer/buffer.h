@@ -16,21 +16,21 @@ public:
     size_t ReadableBytes() const ;
     size_t PrependableBytes() const;
 
-    const char* Peek() const;
+    const std::uint8_t* Peek() const;
     void EnsureWriteable(size_t len);
     void HasWritten(size_t len);
 
     void Retrieve(size_t len);
-    void RetrieveUntil(const char* end);
+    void RetrieveUntil(const std::uint8_t* end);
 
     void RetrieveAll() ;
     std::string RetrieveAllToStr();
 
-    const char* BeginWriteConst() const;
-    char* BeginWrite();
+    const std::uint8_t* BeginWriteConst() const;
+    std::uint8_t* BeginWrite();
 
     void Append(const std::string& str);
-    void Append(const char* str, size_t len);
+    void Append(const std::uint8_t* str, size_t len);
     void Append(const void* data, size_t len);
     void Append(const Buffer& buff);
 
@@ -38,11 +38,11 @@ public:
     ssize_t WriteFd(int fd, int* Errno);
 
 private:
-    char* BeginPtr_();
-    const char* BeginPtr_() const;
+    std::uint8_t* BeginPtr_();
+    const std::uint8_t* BeginPtr_() const;
     void MakeSpace_(size_t len);
 
-    std::vector<char> buffer_;
+    std::vector<std::uint8_t> buffer_;
     std::atomic<std::size_t> readPos_;
     std::atomic<std::size_t> writePos_;
 };
