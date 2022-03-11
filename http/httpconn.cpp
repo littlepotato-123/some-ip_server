@@ -86,37 +86,53 @@ bool HttpConn::process() {
     if(readBuff_.ReadableBytes() <= 0) {
         return false;
     }
-    else if()
-
+    else if(!someip_parse_.parse(readBuff_)) {
+        return false;
+    }
     else {
-        std::string line((char* )readBuff_.Peek(), readBuff_.ReadableBytes());
-        readBuff_.RetrieveAll();
-
-        auto t = time(nullptr);
-        tm now_time;
-        localtime_r(&t, &now_time);
-        char time_buf[64];
-        snprintf(time_buf, 64, "%d-%d-%d %d:%d:%d\n", now_time.tm_year + 1900, now_time.tm_mon + 1,
-                now_time.tm_mday, now_time.tm_hour, now_time.tm_min, now_time.tm_sec );
-        
         MYSQL* sql;
         char oreder[256];
         {
             SqlConnRAII my_sqlConn(&sql, SqlConnPool::Instance());
             if(sql){
-                snprintf(oreder, 256, "insert into user(username, password) values('%s', '%s')",time_buf , line.data());
+                snprintf(oreder, 256, "insert into someip(ServiceId, MethodId, Length, ClientId , SessionId ,MessageType ,PayLoad) values('%u', '%u','%u', '%u','%u', '%u','%s')", someip_parse_.service_id, someip_parse_.method_id,
+                        someip_parse_.length,  someip_parse_.client_id, someip_parse_.session_id, someip_parse_.message_type, someip_parse_.PayLoad);
                 if(mysql_query(sql, oreder)) {
-                    printf("%s failed to add to sql", line.data());
+                    //printf("%s failed to add to sql", line.data());
                 }
             } 
         }
-        transform(line.begin(), line.end(), line.begin(), ::toupper);
-        writeBuff_.Append(line.data(), line.size());
-        string mark("this bill's web");
-        writeBuff_.Append(mark.data(), mark.size());
-        iov_[0].iov_base = const_cast<char* >((char* )writeBuff_.Peek());
-        iov_[0].iov_len = writeBuff_.ReadableBytes();
-        iovCnt_ = 1;
     }
+
+    // else {
+    //     std::string line((char* )readBuff_.Peek(), readBuff_.ReadableBytes());
+    //     readBuff_.RetrieveAll();
+
+    //     auto t = time(nullptr);
+    //     tm now_time;
+    //     localtime_r(&t, &now_time);
+    //     char time_buf[64];
+    //     snprintf(time_buf, 64, "%d-%d-%d %d:%d:%d\n", now_time.tm_year + 1900, now_time.tm_mon + 1,
+    //             now_time.tm_mday, now_time.tm_hour, now_time.tm_min, now_time.tm_sec );
+        
+    //     MYSQL* sql;
+    //     char oreder[256];
+    //     {
+    //         SqlConnRAII my_sqlConn(&sql, SqlConnPool::Instance());
+    //         if(sql){
+    //             snprintf(oreder, 256, "insert into user(username, password) values('%s', '%s')",time_buf , line.data());
+    //             if(mysql_query(sql, oreder)) {
+    //                 printf("%s failed to add to sql", line.data());
+    //             }
+    //         } 
+    //     }
+    //     transform(line.begin(), line.end(), line.begin(), ::toupper);
+    //     writeBuff_.Append(line.data(), line.size());
+    //     string mark("this bill's web");
+    //     writeBuff_.Append(mark.data(), mark.size());
+    //     iov_[0].iov_base = const_cast<char* >((char* )writeBuff_.Peek());
+    //     iov_[0].iov_len = writeBuff_.ReadableBytes();
+    //     iovCnt_ = 1;
+    // }
     return true;
 }

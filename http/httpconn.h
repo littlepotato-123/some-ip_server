@@ -7,7 +7,7 @@
 #ifndef HTTP_CONN_H
 #define HTTP_CONN_H
 
-#include <../someipParse/someipParse.hpp>
+#include <../someipParse/someipParse.h>
 #include <algorithm>
 #include <sys/types.h>
 #include <sys/uio.h>     // readv/writev

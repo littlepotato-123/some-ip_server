@@ -122,13 +122,12 @@ const std::uint8_t* Buffer::BeginPtr_() const {
 
 void Buffer::MakeSpace_(size_t len) {
     if(WritableBytes() + PrependableBytes() < len) {
-        buffer_.resize(writePos_ + len + 1);
+        buffer_.resize(ReadableBytes() + len + 1);
     }
-    else {
-        size_t readable = ReadableBytes();
-        std::copy(BeginPtr_() + readPos_, BeginPtr_() + writePos_, BeginPtr_());
-        readPos_ = 0;
-        writePos_ = readPos_ + readable;
-        assert(readable == ReadableBytes());
-    }
+    size_t readable = ReadableBytes();
+    std::copy(BeginPtr_() + readPos_, BeginPtr_() + writePos_, BeginPtr_());
+    readPos_ = 0;
+    writePos_ = readPos_ + readable;
+    assert(readable == ReadableBytes());
+    
 }
