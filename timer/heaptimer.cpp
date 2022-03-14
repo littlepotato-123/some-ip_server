@@ -81,7 +81,7 @@ void HeapTimer::del_(size_t index) {
     size_t n = heap_.size() - 1;
     assert(i <= n);
     SwapNode_(i, n); //交换完 pop掉之后再重组
-    printf("remove timenode:%d, remain timenodes %d<<<<<<<<<<<<<>>>>>>>>>>>>\n ", heap_.back().id, heap_.size());
+    printf("remove timenode:%d, remain timenodes %ld<<<<<<<<<<<<<>>>>>>>>>>>>\n ", heap_.back().id, heap_.size());
     ref_.erase(heap_.back().id);
     heap_.pop_back();
 

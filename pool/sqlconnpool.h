@@ -18,27 +18,27 @@
 class SqlConnPool {
 public:
     static SqlConnPool* Instance();
-
-    MYSQL *GetConn();
-    void FreeConn(MYSQL * conn);
-    int GetFreeConnCount();
+    ~SqlConnPool();
+    //MYSQL *GetConn();
+   // void FreeConn(MYSQL * conn);
+   // int GetFreeConnCount();
 
     void Init(const char* host, int port,
               const char* user,const char* pwd, 
-              const char* dbName, int connSize);
+              const char* dbName);
     void ClosePool();
-    
-
+    MYSQL* sql_conn = nullptr;
 private:
     SqlConnPool() = default;
-    ~SqlConnPool();
+    
+    static SqlConnPool sqlconnpool_;
 
     int max_size = 0;
     bool is_closing = false;
     
-    std::queue<MYSQL *> connQue_;
-    std::condition_variable full_, not_empty_;
-    std::mutex mtx_;
+    //std::queue<MYSQL *> connQue_;
+    //std::condition_variable full_, not_empty_;
+    //std::mutex mtx_;
     //sem_t semId_;
 };
 

@@ -1,13 +1,10 @@
-/*
- * @Author       : mark
- * @Date         : 2020-06-15
- * @copyleft Apache 2.0
- */ 
-
 #ifndef HTTP_CONN_H
 #define HTTP_CONN_H
 
-#include <../someipParse/someipParse.h>
+#include "../pool/sqlQueryQueue.h"
+#include <string>
+#include <sstream>
+#include "../someipParse/someipParse.h"
 #include <algorithm>
 #include <sys/types.h>
 #include <sys/uio.h>     // readv/writev
@@ -16,13 +13,12 @@
 #include <errno.h>      
 #include "../buffer/buffer.h"
 #include "../pool/sqlconnpool.h"
-#include "../pool/sqlconnRAII.h"
 #include <time.h>
-class HttpConn {
+class Conn {
 public:
-    HttpConn(int fd, const sockaddr_in& addr);
+    Conn(int fd, const sockaddr_in& addr);
 
-    ~HttpConn();
+    ~Conn();
 
     bool GetIsClosed();
 
@@ -53,7 +49,7 @@ public:
     static std::atomic<int> userCount;
     
 private:
-   
+    
     int fd_;
     struct  sockaddr_in addr_;
 
@@ -67,6 +63,7 @@ private:
 
     someipParse someip_parse_;
 
+    
 };
 
 

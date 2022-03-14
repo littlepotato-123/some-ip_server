@@ -8,10 +8,10 @@ WebServer::WebServer(int port, int trigMode, int timeoutMS,bool OptLinger, int s
     //srcDir_ = getcwd(nullptr, 256);
     //assert(srcDir_);
     //strncat(srcDir_, "/resources/", 16);
-    HttpConn::userCount = 0;
-    //HttpConn::srcDir = srcDir_;
+    Conn::userCount = 0;
+    //Conn::srcDir = srcDir_;
 
-    SqlConnPool::Instance()->Init("localhost", sqlPort, sqlUser, sqlPwd, dbName, connPoolNum);
+    SqlConnPool::Instance()->Init("localhost", sqlPort, sqlUser, sqlPwd, dbName);
 
     InitEventMode_(trigMode);
     if(!InitSocket_()) { isClose_ = true;}
@@ -47,7 +47,7 @@ void WebServer::InitEventMode_(int trigMode) {
         connEvent_ |= EPOLLET;
         break;
     }
-    HttpConn::isET = (connEvent_ & EPOLLET);
+    Conn::isET = (connEvent_ & EPOLLET);
 }
 
 void WebServer::Start(){
@@ -80,15 +80,15 @@ void WebServer::Start(){
             }
             else if(events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) {
                 //assert(users_.count(fd) > 0);
-                CloseConn_(weak_ptr<HttpConn>(users_[fd]));
+                CloseConn_(weak_ptr<Conn>(users_[fd]));
             }
             else if(events & EPOLLIN) {
                 //assert(users_.count(fd) > 0);
-                DealRead_(weak_ptr<HttpConn>(users_[fd]));
+                DealRead_(weak_ptr<Conn>(users_[fd]));
             }
             else if(events & EPOLLOUT) {
                // assert(users_.count(fd) > 0);
-                DealWrite_(weak_ptr<HttpConn>(users_[fd]));
+                DealWrite_(weak_ptr<Conn>(users_[fd]));
             } 
         }
     }
@@ -100,7 +100,7 @@ void WebServer::SendError_(int fd, const char*info) {
     close(fd);
 }
 
-void WebServer::CloseConn_(weak_ptr<HttpConn> wkclient) {
+void WebServer::CloseConn_(weak_ptr<Conn> wkclient) {
     //assert(client);
     int fd = -1;
     if(auto client = wkclient.lock()){
@@ -120,12 +120,12 @@ void WebServer::AddClient_(int fd, sockaddr_in addr) {
     assert(fd > 0);
     if(users_.count(fd)){
         printf("same fd\n");
-        CloseConn_(weak_ptr<HttpConn>(users_[fd]));
+        CloseConn_(weak_ptr<Conn>(users_[fd]));
     }
-    users_[fd] = make_shared<HttpConn>(fd, addr);
+    users_[fd] = make_shared<Conn>(fd, addr);
 
     if(timeoutMS_ > 0) {
-        timer_->add(fd, timeoutMS_, std::bind(&WebServer::CloseConn_, this, weak_ptr<HttpConn>(users_[fd])));
+        timer_->add(fd, timeoutMS_, std::bind(&WebServer::CloseConn_, this, weak_ptr<Conn>(users_[fd])));
     }
     epoller_->AddFd(fd, EPOLLIN | connEvent_);
     SetFdNonblock(fd);
@@ -138,7 +138,7 @@ void WebServer::DealListen_(){
     do{
         int fd = accept(listenFd_, (struct sockaddr *)&addr, &len);
         if(fd <= 0){return ;}
-        else if(HttpConn::userCount >= MAX_FD){
+        else if(Conn::userCount >= MAX_FD){
             SendError_(fd, "Server busy!");
             return;
         }
@@ -148,25 +148,25 @@ void WebServer::DealListen_(){
     }while(listenEvent_ & EPOLLET); 
 }
 
-void WebServer::DealRead_(weak_ptr<HttpConn> wkclient){
+void WebServer::DealRead_(weak_ptr<Conn> wkclient){
 
     //assert(client);
     if(auto client = wkclient.lock()){
         printf("start to deal read\n");
         ExtentTime_(client);
-        threadpool_->AddTask(std::bind(&WebServer::OnRead_, this, weak_ptr<HttpConn>(client)));
+        threadpool_->AddTask(std::bind(&WebServer::OnRead_, this, weak_ptr<Conn>(client)));
     }
 }
 
-void WebServer::DealWrite_(weak_ptr<HttpConn> wkclient) {
+void WebServer::DealWrite_(weak_ptr<Conn> wkclient) {
    // assert(client);
     if(auto client = wkclient.lock()){
         printf("start to deal write\n");
         ExtentTime_(client);
-        threadpool_->AddTask(std::bind(&WebServer::OnWrite_, this, weak_ptr<HttpConn>(client)));
+        threadpool_->AddTask(std::bind(&WebServer::OnWrite_, this, weak_ptr<Conn>(client)));
     }
 }
-void WebServer::OnRead_(weak_ptr<HttpConn> wkclient) {
+void WebServer::OnRead_(weak_ptr<Conn> wkclient) {
     //assert(client);
     auto client = wkclient.lock();
     if(!client) return;
@@ -182,7 +182,7 @@ void WebServer::OnRead_(weak_ptr<HttpConn> wkclient) {
     OnProcess(client);
 }
 
-void WebServer::OnProcess(weak_ptr<HttpConn> wkclient) {
+void WebServer::OnProcess(weak_ptr<Conn> wkclient) {
     auto client = wkclient.lock();
     if(!client) return;
     if(client->process()) {
@@ -192,7 +192,7 @@ void WebServer::OnProcess(weak_ptr<HttpConn> wkclient) {
     }
 }
 
-void WebServer::OnWrite_(weak_ptr<HttpConn> wkclient) {
+void WebServer::OnWrite_(weak_ptr<Conn> wkclient) {
    // assert(client);
     auto client = wkclient.lock();
     if(!client) return;
@@ -202,7 +202,7 @@ void WebServer::OnWrite_(weak_ptr<HttpConn> wkclient) {
     if(client->ToWriteBytes() == 0) {
         /* 传输完成 */
         if(1) {
-            OnProcess(weak_ptr<HttpConn>(client));
+            OnProcess(weak_ptr<Conn>(client));
             return;
         }
     }
@@ -213,7 +213,7 @@ void WebServer::OnWrite_(weak_ptr<HttpConn> wkclient) {
             return;
         }
     }
-    CloseConn_(weak_ptr<HttpConn>(client));
+    CloseConn_(weak_ptr<Conn>(client));
 }
 bool WebServer::InitSocket_(){
     int ret;
@@ -273,7 +273,7 @@ int WebServer::SetFdNonblock(int fd) {
     return fcntl(fd, F_SETFL, fcntl(fd, F_GETFD, 0) | O_NONBLOCK);
 }
 
-void WebServer::ExtentTime_(weak_ptr<HttpConn> wkclient) {
+void WebServer::ExtentTime_(weak_ptr<Conn> wkclient) {
     //assert(client);
     auto client = wkclient.lock();
     if(!client) return;

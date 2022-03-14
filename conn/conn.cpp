@@ -1,24 +1,24 @@
-#include "httpconn.h"
+#include "conn.h"
 using namespace std;
 
-//const char* HttpConn::srcDir;
-std::atomic<int> HttpConn::userCount;
-bool HttpConn::isET;
+//const char* Conn::srcDir;
+std::atomic<int> Conn::userCount;
+bool Conn::isET;
 
-HttpConn::HttpConn(int fd, const sockaddr_in& addr): isClose_(false) {
+Conn::Conn(int fd, const sockaddr_in& addr): isClose_(false) {
     init(fd, addr);
 }
 
-HttpConn::~HttpConn() {
+Conn::~Conn() {
     --userCount;
     close(fd_);
     Close();
 }
 
-bool HttpConn::GetIsClosed() {
+bool Conn::GetIsClosed() {
     return isClose_;
 }
-void HttpConn::init(int fd, const sockaddr_in& addr) {
+void Conn::init(int fd, const sockaddr_in& addr) {
     assert(fd > 0);
     ++userCount;
     addr_ = addr;
@@ -27,27 +27,27 @@ void HttpConn::init(int fd, const sockaddr_in& addr) {
     readBuff_.RetrieveAll();
     //isClose_ = false;
 }
-void HttpConn::Close() {
+void Conn::Close() {
     isClose_ = true;
 }
 
-int HttpConn::GetFd() const {
+int Conn::GetFd() const {
     return fd_;
 }
 
-struct sockaddr_in HttpConn::GetAddr() const {
+struct sockaddr_in Conn::GetAddr() const {
     return addr_;
 }
 
-const char* HttpConn::GetIP() const {
+const char* Conn::GetIP() const {
     return inet_ntoa(addr_.sin_addr);
 }
 
-int HttpConn::GetPort() const {
+int Conn::GetPort() const {
     return ntohs(addr_.sin_port);
 }
 
-ssize_t HttpConn::read(int* saveErrono){
+ssize_t Conn::read(int* saveErrono){
     ssize_t len = -1;
     do {
         len = readBuff_.ReadFd(fd_, saveErrono);
@@ -56,7 +56,7 @@ ssize_t HttpConn::read(int* saveErrono){
     return len;
 }
 
-ssize_t HttpConn::write(int* saveErrno) {
+ssize_t Conn::write(int* saveErrno) {
     ssize_t len = -1;
     do {
         len = writev(fd_, iov_, iovCnt_);
@@ -82,7 +82,7 @@ ssize_t HttpConn::write(int* saveErrno) {
     return len;
 }
 
-bool HttpConn::process() {
+bool Conn::process() {
     if(readBuff_.ReadableBytes() <= 0) {
         return false;
     }
@@ -91,16 +91,16 @@ bool HttpConn::process() {
     }
     else {
         MYSQL* sql;
-        char oreder[256];
+        string oreder;
         {
-            SqlConnRAII my_sqlConn(&sql, SqlConnPool::Instance());
-            if(sql){
-                snprintf(oreder, 256, "insert into someip(ServiceId, MethodId, Length, ClientId , SessionId ,MessageType ,PayLoad) values('%u', '%u','%u', '%u','%u', '%u','%s')", someip_parse_.service_id, someip_parse_.method_id,
-                        someip_parse_.length,  someip_parse_.client_id, someip_parse_.session_id, someip_parse_.message_type, someip_parse_.PayLoad);
-                if(mysql_query(sql, oreder)) {
-                    //printf("%s failed to add to sql", line.data());
-                }
-            } 
+            stringstream ss;
+            //SqlConnRAII my_sqlConn(&sql, SqlConnPool::Instance());
+            std::string query;
+            ss << "insert into someip(ServiceId, MethodId, Length, ClientId , SessionId ,MessageType ,PayLoad) values(" << someip_parse_.service_id << "," << someip_parse_.method_id << "," <<someip_parse_.length << "," << someip_parse_.client_id << "," << someip_parse_.session_id << "," <<someip_parse_.message_type << "," << someip_parse_.PayLoad_real << ")";
+            getline(ss, query);
+            sqlQueryQueue::Instance()->AddQueue(std::move(query));
+            // snprintf(oreder, 256, "insert into someip(ServiceId, MethodId, Length, ClientId , SessionId ,MessageType ,PayLoad) values('%u', '%u','%u', '%u','%u', '%u','%s')", someip_parse_.service_id, someip_parse_.method_id,
+            //         someip_parse_.length,  someip_parse_.client_id, someip_parse_.session_id, someip_parse_.message_type, someip_parse_.PayLoad_real.data());
         }
     }
 

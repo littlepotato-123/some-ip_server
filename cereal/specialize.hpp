@@ -29,7 +29,7 @@
 
 #ifndef CEREAL_SPECIALIZE_HPP_
 #define CEREAL_SPECIALIZE_HPP_
-
+#include <type_traits>
 namespace cereal
 {
   // Forward declaration of access class that users can become friends with
@@ -106,7 +106,6 @@ namespace cereal
       @ingroup Access */
   template <class Archive, class T, specialization S>
   struct specialize : public std::false_type {};
-
   //! Convenient macro for performing specialization for all archive types
   /*! This performs specialization for the specific type for all types of archives.
       This macro should be placed at the global namespace.

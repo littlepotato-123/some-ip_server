@@ -10,8 +10,12 @@
 
 #include "../buffer/buffer.h"
 //#include "../log/log.h"
+#include "../cereal/archives/binary.hpp"
+#include "../cereal/types/memory.hpp"
+#include "../cereal/types/string.hpp"
+#include <sstream>
 #include "../pool/sqlconnpool.h"
-#include "../pool/sqlconnRAII.h"
+
 
 class someipParse {
 public:
@@ -59,11 +63,18 @@ public:
     std::uint32_t length;
     std::uint16_t service_id, method_id, client_id, session_id;
     std::uint8_t message_type, protocal_version, interface_version, return_code;
-    std::string pay_load_;
-    std::string PayLoad;
+    std::string pay_load_binary;
+    std::string PayLoad_real;
+
+    struct someip_string_PayLoad{
+        std::string buf;
+        template<typename Archive> void serialize(Archive& ar) {
+            ar(buf);
+        }
+    };
 
 private:
-
+    someip_string_PayLoad PayLoad_struct;
     PARSE_STATUS state_ = HEAD;
 
     void ParseHead(Buffer& buff) {
@@ -71,23 +82,23 @@ private:
         uint16_t* tmp_ptr_16;
         //service_id 
         tmp_ptr_16 = (std::uint16_t* )buff.Peek();
-        service_id = ntohs(*tmp_ptr_16);
+        service_id = *tmp_ptr_16;
         buff.Retrieve(2);
         //method_id
         tmp_ptr_16 = (std::uint16_t* )buff.Peek();
-        method_id = ntohs(*tmp_ptr_16);
+        method_id = *tmp_ptr_16;
         buff.Retrieve(2);
         //length
         tmp_ptr_32 = (std::uint32_t* )buff.Peek();
-        length = ntohl(*tmp_ptr_32);
+        length = *tmp_ptr_32;
         buff.Retrieve(4);
         //client id
         tmp_ptr_16 = (std::uint16_t* )buff.Peek();
-        client_id = ntohs(*tmp_ptr_16);
+        client_id = *tmp_ptr_16;
         buff.Retrieve(2);
         //session id
         tmp_ptr_16 = (std::uint16_t* )buff.Peek();
-        session_id = ntohs(*tmp_ptr_16);
+        session_id = *tmp_ptr_16;
         buff.Retrieve(2);
         //protocol version 固定为0x01
         protocal_version = (*buff.Peek());
@@ -114,18 +125,22 @@ private:
             ret = false;
             return;
         }
-        pay_load_.clear();
+        pay_load_binary.clear();
 
         auto cur_ptr = buff.Peek();
         auto end_ptr = cur_ptr + byte_to_read;
         while(cur_ptr != end_ptr) {
-            pay_load_.push_back(*cur_ptr++);
+            pay_load_binary.push_back(*cur_ptr++);
         }
         buff.Retrieve(byte_to_read);
+        {
+            std::istringstream iss(pay_load_binary);
+            cereal::BinaryInputArchive archive(iss);
+            archive(PayLoad_struct);
+        }
+        PayLoad_real = std::move(PayLoad_struct.buf);
         state_ = FINISH;
     }
-
-
 };
 
 
