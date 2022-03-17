@@ -1,6 +1,6 @@
  
-#ifndef WEBSERVER_H
-#define WEBSERVER_H
+#ifndef SERVER_H
+#define SERVER_H
 
 #include <ctime>
 #include <unordered_map>
@@ -18,12 +18,12 @@
 #include "../pool/threadpool.h"
 #include "../conn/conn.h"
 #include "../pool/sqlconnpool.h"
-class WebServer {
+class Server {
 public:
-    WebServer( int port, int trigMode, int timeoutMS,bool OptLinger, int sqlPort, const char* sqlUser, 
+    Server( int port, int trigMode, int timeoutMS,bool OptLinger, int sqlPort, const char* sqlUser, 
         const char* sqlPwd, const char* dbName, int connPoolNum, int threadNum );
 
-    ~WebServer();
+    ~Server();
     void Start();
 
 private:
@@ -68,4 +68,4 @@ private:
 };
 
 
-#endif //WEBSERVER_H
+#endif 
