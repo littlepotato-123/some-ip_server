@@ -14,7 +14,9 @@ create table someip(
     Length INT UNSIGNED, 
     ClientId SMALLINT UNSIGNED,  
     SessionId SMALLINT UNSIGNED, 
-    MessageType TINYINT UNSIGNED )engine=innoDB;	
+    MessageType TINYINT UNSIGNED，
+    PayLoad VARCHAR(1000)
+    )engine=innoDB;	
 ```
 
 ```shell
