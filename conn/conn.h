@@ -1,5 +1,5 @@
-#ifndef HTTP_CONN_H
-#define HTTP_CONN_H
+#ifndef CONN_H
+#define CONN_H
 
 #include "../pool/sqlQueryQueue.h"
 #include <string>
