@@ -24,8 +24,8 @@ bool HeapTimer::siftdown_(size_t index, size_t n) {
     assert(n >= 0 && n <= heap_.size());
     size_t parent = index;
     size_t child = (index << 1) + 1;
-    printf("begin to siftdown-\n");
-    printf("parent is %ld, child is %ld\n", parent, child);
+    //printf("begin to siftdown-\n");
+    //printf("parent is %ld, child is %ld\n", parent, child);
     while(child < n){
         if(child + 1 < heap_.size() && heap_[child + 1] < heap_[child])
             ++child;
@@ -34,7 +34,7 @@ bool HeapTimer::siftdown_(size_t index, size_t n) {
         parent = child;
         child = (parent << 1) + 1;
     }
-    printf("over siftdown-\n");
+    //printf("over siftdown-\n");
     return parent > index;
 }
 
@@ -80,16 +80,16 @@ void HeapTimer::del_(size_t index) {
     size_t i = index;
     size_t n = heap_.size() - 1;
     assert(i <= n);
-    SwapNode_(i, n); //交换完 pop掉之后再重组
-    printf("remove timenode:%d, remain timenodes %ld<<<<<<<<<<<<<>>>>>>>>>>>>\n ", heap_.back().id, heap_.size());
+    if(i != n ) SwapNode_(i, n); //交换完 pop掉之后再重组
+    //printf("remove timenode:%d, remain timenodes %ld<<<<<<<<<<<<<>>>>>>>>>>>>\n ", heap_.back().id, heap_.size());
     ref_.erase(heap_.back().id);
     heap_.pop_back();
 
     if(!heap_.size()) return;
-    if(!siftdown_(i, n)) {
-        siftup_(i);
+    if(i != n) {
+        if(!siftdown_(i, n)) siftup_(i);
     }
-    
+     
 }
 
 void HeapTimer::adjust(int id, int timeout) {

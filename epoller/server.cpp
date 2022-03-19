@@ -18,7 +18,7 @@ Server::Server(int port, int trigMode, int timeoutMS,bool OptLinger, int sqlPort
 }
 
 Server::~Server() {
-    printf("Server is disconstructing\n");
+    //printf("Server is disconstructing\n");
     close(listenFd_);
     isClose_ = true;
     //free(srcDir_);
@@ -57,20 +57,20 @@ void Server::Start(){
         
         // auto now_time = clock();
         // auto time_pass = (double)(now_time - begin_time)/CLOCKS_PER_SEC * 1000;
-        // printf("%f\n", time_pass);
+        // //printf("%f\n", time_pass);
 
         // if( time_pass  >= 1){ 
-        //     printf("time out\n");
+        //     //printf("time out\n");
         //     isClose_ = 1;
         //     continue;
         // }
         if(timeoutMS_ > 0) {
             timeMS = timer_->GetNextTick();
-            printf("timeMS = %d\n", timeMS);
+            //printf("timeMS = %d\n", timeMS);
         }
 
         int eventCnt = epoller_->Wait(timeMS);
-        printf("one more loop\n");
+        //printf("one more loop\n");
 
         for(int i = 0; i < eventCnt; ++i){
             int fd = epoller_->GetEventFd(i);
@@ -107,19 +107,19 @@ void Server::CloseConn_(weak_ptr<Conn> wkclient) {
         if(client->GetIsClosed()) return;
         client->Close();
         fd = client->GetFd();
-        printf("closing client:%d ip:%s port:%d==================\n",client->GetFd(), client->GetIP(), client->GetPort());
+        //printf("closing client:%d ip:%s port:%d==================\n",client->GetFd(), client->GetIP(), client->GetPort());
         SendError_(client->GetFd(), "time out!");
         epoller_->DelFd(client->GetFd());
         timer_->del_fd(client->GetFd());
         users_.erase(client->GetFd());
     }
-    if(wkclient.expired() && fd != -1) printf("已经删除连接%d\n", fd);
+    //if(wkclient.expired() && fd != -1) //printf("已经删除连接%d\n", fd);
 }
 
 void Server::AddClient_(int fd, sockaddr_in addr) {
     assert(fd > 0);
     if(users_.count(fd)){
-        printf("same fd\n");
+        //printf("same fd\n");
         CloseConn_(weak_ptr<Conn>(users_[fd]));
     }
     users_[fd] = make_shared<Conn>(fd, addr);
@@ -132,7 +132,7 @@ void Server::AddClient_(int fd, sockaddr_in addr) {
 }
 
 void Server::DealListen_(){
-    printf("deal listen\n");
+    //printf("deal listen\n");
     struct sockaddr_in addr;
     socklen_t len = sizeof(addr);
     do{
@@ -142,9 +142,9 @@ void Server::DealListen_(){
             SendError_(fd, "Server busy!");
             return;
         }
-        printf("deal listen new connect fd = %d\n", fd);
+        //printf("deal listen new connect fd = %d\n", fd);
         AddClient_(fd, addr);
-        printf("deal listen addclient over\n");
+        //printf("deal listen addclient over\n");
     }while(listenEvent_ & EPOLLET); 
 }
 
@@ -152,7 +152,7 @@ void Server::DealRead_(weak_ptr<Conn> wkclient){
 
     //assert(client);
     if(auto client = wkclient.lock()){
-        printf("start to deal read\n");
+        //printf("start to deal read\n");
         ExtentTime_(client);
         threadpool_->AddTask(std::bind(&Server::OnRead_, this, weak_ptr<Conn>(client)));
     }
@@ -161,7 +161,7 @@ void Server::DealRead_(weak_ptr<Conn> wkclient){
 void Server::DealWrite_(weak_ptr<Conn> wkclient) {
    // assert(client);
     if(auto client = wkclient.lock()){
-        printf("start to deal write\n");
+        //printf("start to deal write\n");
         ExtentTime_(client);
         threadpool_->AddTask(std::bind(&Server::OnWrite_, this, weak_ptr<Conn>(client)));
     }
@@ -170,7 +170,7 @@ void Server::OnRead_(weak_ptr<Conn> wkclient) {
     //assert(client);
     auto client = wkclient.lock();
     if(!client) return;
-    printf("onReading\n");
+    //printf("onReading\n");
     int ret = -1;
     int readErrno = 0;
     ret = client->read(&readErrno);
@@ -178,7 +178,7 @@ void Server::OnRead_(weak_ptr<Conn> wkclient) {
         CloseConn_(client);
         return;
     }
-    printf("onRead over, client's fd is %d,begin to on process\n", client->GetFd());
+    //printf("onRead over, client's fd is %d,begin to on process\n", client->GetFd());
     OnProcess(client);
 }
 
@@ -277,7 +277,7 @@ void Server::ExtentTime_(weak_ptr<Conn> wkclient) {
     //assert(client);
     auto client = wkclient.lock();
     if(!client) return;
-    printf("extentTiming\n");
+    //printf("extentTiming\n");
     if(timeoutMS_ > 0) { timer_->adjust(client->GetFd(), timeoutMS_); }
-    printf("extentTime over\n");
+    //printf("extentTime over\n");
 }

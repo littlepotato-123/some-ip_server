@@ -23,7 +23,7 @@ public:
                             locker.lock();
                         } 
                         else if(pool->isClosed) {
-                            printf("i am a thread closing!\n");
+                            //printf("i am a thread closing!\n");
                             break;
                             }
                         else pool->cond.wait(locker);
