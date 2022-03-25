@@ -20,7 +20,7 @@ public:
 
     ~Conn();
 
-    bool GetIsClosed();
+    //bool GetIsClosed();
 
     void init(int sockFd, const sockaddr_in& addr);
 
@@ -28,7 +28,7 @@ public:
 
     ssize_t write(int* saveErrno);
 
-    void Close();
+    //void Close();
 
     int GetFd() const;
 
@@ -38,7 +38,7 @@ public:
     
     sockaddr_in GetAddr() const;
     
-    bool process();
+    void process();
 
     int ToWriteBytes() { 
         return iov_[0].iov_len + iov_[1].iov_len; 
@@ -53,7 +53,7 @@ private:
     int fd_;
     struct  sockaddr_in addr_;
 
-    bool isClose_;
+    //bool isClose_;
     
     int iovCnt_;
     struct iovec iov_[2];

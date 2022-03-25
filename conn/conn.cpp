@@ -5,19 +5,19 @@ using namespace std;
 std::atomic<int> Conn::userCount;
 bool Conn::isET;
 
-Conn::Conn(int fd, const sockaddr_in& addr): isClose_(false) {
+Conn::Conn(int fd, const sockaddr_in& addr)  {
     init(fd, addr);
 }
 
 Conn::~Conn() {
     --userCount;
     close(fd_);
-    Close();
+    //Close();
 }
 
-bool Conn::GetIsClosed() {
-    return isClose_;
-}
+// bool Conn::GetIsClosed() {
+//     return isClose_;
+// }
 void Conn::init(int fd, const sockaddr_in& addr) {
     assert(fd > 0);
     ++userCount;
@@ -27,9 +27,9 @@ void Conn::init(int fd, const sockaddr_in& addr) {
     readBuff_.RetrieveAll();
     //isClose_ = false;
 }
-void Conn::Close() {
-    isClose_ = true;
-}
+// void Conn::Close() {
+//     isClose_ = true;
+// }
 
 int Conn::GetFd() const {
     return fd_;
@@ -82,57 +82,22 @@ ssize_t Conn::write(int* saveErrno) {
     return len;
 }
 
-bool Conn::process() {
-    if(readBuff_.ReadableBytes() <= 0) {
-        return false;
+void Conn::process() {
+    while(readBuff_.ReadableBytes() >= 16){
+        std::cout<<readBuff_.ReadableBytes()<<std::endl;
+        stringstream ss;
+        //SqlConnRAII my_sqlConn(&sql, SqlConnPool::Instance());
+        std::string query;
+        someip_parse_.parse(readBuff_);
+        ss << "insert into someip(ServiceId, MethodId, Length, ClientId , SessionId ,MessageType ,PayLoad) values(" << someip_parse_.service_id << "," << someip_parse_.method_id << "," <<someip_parse_.length << "," << someip_parse_.client_id << "," << someip_parse_.session_id << "," <<someip_parse_.message_type << ",'" << someip_parse_.PayLoad_real << "')";
+        getline(ss, query);
+        std::cout<<"准备放进去"<<std::endl;
+        std::cout<<query<<std::endl;
+        sqlQueryQueue::Instance()->AddQueue(std::move(query));
+        std::cout<<"放进去了"<<std::endl;
+        std::cout<<readBuff_.ReadableBytes()<<std::endl;
     }
-    else if(!someip_parse_.parse(readBuff_)) {
-        return false;
-    }
-    else {
-        MYSQL* sql;
-        string oreder;
-        {
-            stringstream ss;
-            //SqlConnRAII my_sqlConn(&sql, SqlConnPool::Instance());
-            std::string query;
-            ss << "insert into someip(ServiceId, MethodId, Length, ClientId , SessionId ,MessageType ,PayLoad) values(" << someip_parse_.service_id << "," << someip_parse_.method_id << "," <<someip_parse_.length << "," << someip_parse_.client_id << "," << someip_parse_.session_id << "," <<someip_parse_.message_type << "," << someip_parse_.PayLoad_real << ")";
-            getline(ss, query);
-            sqlQueryQueue::Instance()->AddQueue(std::move(query));
-            // snprintf(oreder, 256, "insert into someip(ServiceId, MethodId, Length, ClientId , SessionId ,MessageType ,PayLoad) values('%u', '%u','%u', '%u','%u', '%u','%s')", someip_parse_.service_id, someip_parse_.method_id,
-            //         someip_parse_.length,  someip_parse_.client_id, someip_parse_.session_id, someip_parse_.message_type, someip_parse_.PayLoad_real.data());
-        }
-    }
-
-    // else {
-    //     std::string line((char* )readBuff_.Peek(), readBuff_.ReadableBytes());
-    //     readBuff_.RetrieveAll();
-
-    //     auto t = time(nullptr);
-    //     tm now_time;
-    //     localtime_r(&t, &now_time);
-    //     char time_buf[64];
-    //     snprintf(time_buf, 64, "%d-%d-%d %d:%d:%d\n", now_time.tm_year + 1900, now_time.tm_mon + 1,
-    //             now_time.tm_mday, now_time.tm_hour, now_time.tm_min, now_time.tm_sec );
-        
-    //     MYSQL* sql;
-    //     char oreder[256];
-    //     {
-    //         SqlConnRAII my_sqlConn(&sql, SqlConnPool::Instance());
-    //         if(sql){
-    //             snprintf(oreder, 256, "insert into user(username, password) values('%s', '%s')",time_buf , line.data());
-    //             if(mysql_query(sql, oreder)) {
-    //                 printf("%s failed to add to sql", line.data());
-    //             }
-    //         } 
-    //     }
-    //     transform(line.begin(), line.end(), line.begin(), ::toupper);
-    //     writeBuff_.Append(line.data(), line.size());
-    //     string mark("this bill's web");
-    //     writeBuff_.Append(mark.data(), mark.size());
-    //     iov_[0].iov_base = const_cast<char* >((char* )writeBuff_.Peek());
-    //     iov_[0].iov_len = writeBuff_.ReadableBytes();
-    //     iovCnt_ = 1;
-    // }
-    return true;
+    readBuff_.RetrieveAll();        
 }
+
+    

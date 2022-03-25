@@ -14,13 +14,13 @@
 #include <arpa/inet.h>
 
 #include "epoller.h"
-#include "../timer/heaptimer.h"
+//#include "../timer/heaptimer.h"
 #include "../pool/threadpool.h"
 #include "../conn/conn.h"
 #include "../pool/sqlconnpool.h"
 class Server {
 public:
-    Server( int port, int trigMode, int timeoutMS,bool OptLinger, int sqlPort, const char* sqlUser, 
+    Server( int port, int trigMode,bool OptLinger, int sqlPort, const char* sqlUser, 
         const char* sqlPwd, const char* dbName, int connPoolNum, int threadNum );
 
     ~Server();
@@ -60,7 +60,7 @@ private:
     uint32_t listenEvent_;
     uint32_t connEvent_;
    
-    std::unique_ptr<HeapTimer> timer_;
+    //std::unique_ptr<HeapTimer> timer_;
     std::unique_ptr<ThreadPool> threadpool_;
     std::unique_ptr<Epoller> epoller_;
     //users_并发问题
