@@ -40,12 +40,12 @@ public:
     void parse(Buffer& buff){
         //bool ret = true;
         while(buff.ReadableBytes() && state_ != FINISH) {
-            std::cout<<buff.ReadableBytes()<<std::endl;
+            //std::cout<<buff.ReadableBytes()<<std::endl;
             switch(state_)
             {
                 case HEAD:
                     ParseHead(buff);
-                    std::cout<<buff.ReadableBytes()<<std::endl;
+                    //std::cout<<buff.ReadableBytes()<<std::endl;
                     break;
                 case PAYLOAD:
                     ParsePayload(buff);
@@ -83,46 +83,46 @@ private:
         tmp_ptr_16 = (std::uint16_t* )buff.Peek();
         service_id = htons(*tmp_ptr_16);
         buff.Retrieve(2);
-        std::cout<<"service_id  "<< service_id <<std::endl;
+        //std::cout<<"service_id  "<< service_id <<std::endl;
         //method_id
         tmp_ptr_16 = (std::uint16_t* )buff.Peek();
         method_id = htons(*tmp_ptr_16);
         buff.Retrieve(2);
-        std::cout<<"method_id  "<< method_id <<std::endl;
+        //std::cout<<"method_id  "<< method_id <<std::endl;
         //length
         tmp_ptr_32 = (std::uint32_t* )buff.Peek();
         length = htonl(*tmp_ptr_32);
         buff.Retrieve(4);
-        std::cout<<"length  "<< length <<std::endl;
+        //std::cout<<"length  "<< length <<std::endl;
         //client id
         tmp_ptr_16 = (std::uint16_t* )buff.Peek();
         client_id = htons(*tmp_ptr_16);
         buff.Retrieve(2);
-        std::cout<<"client_id  "<< client_id <<std::endl;
+        //std::cout<<"client_id  "<< client_id <<std::endl;
         //session id
         tmp_ptr_16 = (std::uint16_t* )buff.Peek();
         session_id = htons(*tmp_ptr_16);
         buff.Retrieve(2);
-        std::cout<<"session_id  "<< session_id <<std::endl;
-        std::cout<<buff.ReadableBytes()<<std::endl;
+        //std::cout<<"session_id  "<< session_id <<std::endl;
+        //std::cout<<buff.ReadableBytes()<<std::endl;
         //protocol version 固定为0x01
         protocal_version = (*buff.Peek());
         buff.Retrieve(1);
-        std::cout<<"protocal_version  "<< (int)protocal_version <<std::endl;
+        //std::cout<<"protocal_version  "<< (int)protocal_version <<std::endl;
         //Interface Version
         interface_version = (*buff.Peek());
         buff.Retrieve(1);
-        std::cout<<"interface_version  "<< interface_version <<std::endl;
+        //std::cout<<"interface_version  "<< interface_version <<std::endl;
         //Message Type
         message_type_tmp = (*buff.Peek());
         message_type = (std::uint16_t)message_type_tmp;
         buff.Retrieve(1);
-        std::cout<<"message_type  "<< message_type <<std::endl;
+        //std::cout<<"message_type  "<< message_type <<std::endl;
         //return code
         return_code = (*buff.Peek());
         buff.Retrieve(1);
-        std::cout<<"return_code  "<< return_code <<std::endl;
-        std::cout<<buff.ReadableBytes()<<std::endl;
+        //std::cout<<"return_code  "<< return_code <<std::endl;
+        //std::cout<<buff.ReadableBytes()<<std::endl;
         if(length <= 8) state_ = FINISH;
         else state_ = PAYLOAD;
     };

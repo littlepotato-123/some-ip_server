@@ -54,7 +54,8 @@ private:
                 notFull_.notify_one();
                 //std::cout<<"准备插入"<<std::endl;
                 //if(!SqlConnPool::Instance()->sql_conn) std::cout<<"连接空"<<std::endl;
-                mysql_query(SqlConnPool::Instance()->sql_conn, query.data());
+                if(mysql_query(SqlConnPool::Instance()->sql_conn, query.data())) 
+                    std::cout<<"没放进去"<<std::endl;
                     //std::cout<<"插入了"<<std::endl;
                 //else 
                     //std::cout<<"插不进去"<<std::endl;

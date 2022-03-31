@@ -84,18 +84,18 @@ ssize_t Conn::write(int* saveErrno) {
 
 void Conn::process() {
     while(readBuff_.ReadableBytes() >= 16){
-        std::cout<<readBuff_.ReadableBytes()<<std::endl;
+        //std::cout<<readBuff_.ReadableBytes()<<std::endl;
         stringstream ss;
         //SqlConnRAII my_sqlConn(&sql, SqlConnPool::Instance());
         std::string query;
         someip_parse_.parse(readBuff_);
         ss << "insert into someip(ServiceId, MethodId, Length, ClientId , SessionId ,MessageType ,PayLoad) values(" << someip_parse_.service_id << "," << someip_parse_.method_id << "," <<someip_parse_.length << "," << someip_parse_.client_id << "," << someip_parse_.session_id << "," <<someip_parse_.message_type << ",'" << someip_parse_.PayLoad_real << "')";
         getline(ss, query);
-        std::cout<<"准备放进去"<<std::endl;
-        std::cout<<query<<std::endl;
+        //std::cout<<"准备放进去"<<std::endl;
+        //std::cout<<query<<std::endl;
         sqlQueryQueue::Instance()->AddQueue(std::move(query));
-        std::cout<<"放进去了"<<std::endl;
-        std::cout<<readBuff_.ReadableBytes()<<std::endl;
+        //std::cout<<"放进去了"<<std::endl;
+        //std::cout<<readBuff_.ReadableBytes()<<std::endl;
     }
     readBuff_.RetrieveAll();        
 }
