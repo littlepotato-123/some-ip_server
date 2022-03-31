@@ -38,7 +38,7 @@ public:
 private:
     static sqlQueryQueue sqlQueryQueue_;
 
-    explicit sqlQueryQueue(size_t maxSize = 1000) : isClosed(false), maxSize_(maxSize) {
+    explicit sqlQueryQueue(size_t maxSize = 20000) : isClosed(false), maxSize_(maxSize) {
         std::thread( [&] () {
             while(1) {
                 std::string query;

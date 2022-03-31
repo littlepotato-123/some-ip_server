@@ -80,19 +80,20 @@ void Server::SendError_(int fd, const char*info) {
 
 void Server::CloseConn_(weak_ptr<Conn> wkclient) {
     //assert(client);
-    int fd = -1;
+    int fd ;
     if(auto client = wkclient.lock()){
         fd = client->GetFd();
-        epoller_->DelFd(client->GetFd());
-        users_.erase(client->GetFd());
     }
+    users_.erase(fd);
+    epoller_->DelFd(fd); 
 }
 
 void Server::AddClient_(int fd, sockaddr_in addr) {
     assert(fd > 0);
+    SetFdNonblock(fd);
     users_[fd] = make_shared<Conn>(fd, addr);
     epoller_->AddFd(fd, EPOLLIN | connEvent_);
-    SetFdNonblock(fd);
+    
 }
 
 void Server::DealListen_(){
@@ -100,8 +101,12 @@ void Server::DealListen_(){
     socklen_t len = sizeof(addr);
     do{
         int fd = accept(listenFd_, (struct sockaddr *)&addr, &len);
-        if(fd <= 0){return ;}
+        if(fd <= 0){
+            //std::cout<<"fd小于零accept"<<std::endl;
+            return ;
+            }
         else if(Conn::userCount >= MAX_FD){
+            std::cout<<"fd大于最大accept"<<std::endl;
             SendError_(fd, "Server busy!");
             return;
         }
@@ -124,16 +129,18 @@ void Server::DealWrite_(weak_ptr<Conn> wkclient) {
 }
 void Server::OnRead_(weak_ptr<Conn> wkclient) {
     //assert(client);
-    auto client = wkclient.lock();
-    if(!client) return;
     int ret = -1;
     int readErrno = 0;
-    ret = client->read(&readErrno);
+    {
+        auto client = wkclient.lock();
+        if(!client) return;
+        ret = client->read(&readErrno);
+    }
     if(ret <= 0 && readErrno != EAGAIN) {
-        CloseConn_(weak_ptr<Conn>(client));
+        CloseConn_(wkclient);
         return;
     }
-    OnProcess(weak_ptr<Conn>(client));
+    OnProcess(wkclient);
 }
 
 void Server::OnProcess(weak_ptr<Conn> wkclient) {
