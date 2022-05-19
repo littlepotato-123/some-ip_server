@@ -14,8 +14,9 @@ create table someip(
     Length INT UNSIGNED, 
     ClientId SMALLINT UNSIGNED,  
     SessionId SMALLINT UNSIGNED, 
-    MessageType TINYINT UNSIGNED，
-    PayLoad VARCHAR(1000)
+    MessageType TINYINT UNSIGNED,
+    PayLoad varchar(1000),
+    update_time timestamp  default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP COMMENT '更新时间'
     )engine=innoDB;	
 ```
 
