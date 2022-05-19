@@ -212,7 +212,7 @@ bool Server::InitSocket_(){
         return false;
     }
 
-    ret = listen(listenFd_, 6);
+    ret = listen(listenFd_, 128);
     if(ret < 0){
         close(listenFd_);
         return false;

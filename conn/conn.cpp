@@ -97,7 +97,7 @@ void Conn::process() {
         //std::cout<<"放进去了"<<std::endl;
         //std::cout<<readBuff_.ReadableBytes()<<std::endl;
     }
-    readBuff_.RetrieveAll();        
+    //readBuff_.RetrieveAll();        
 }
 
     
